@@ -1,1 +1,1 @@
-update config on 2025-11-24
+fix config on 2025-11-24
