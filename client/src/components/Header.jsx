@@ -50,7 +50,7 @@ const Header = () => {
         </motion.button>
         
         <motion.a
-          href="https://github.com"
+          href="https://github.com/maverick-node"
           target="_blank"
           rel="noopener noreferrer"
           whileHover={{ scale: 1.1 }}

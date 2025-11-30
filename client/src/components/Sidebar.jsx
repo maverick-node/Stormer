@@ -1,12 +1,23 @@
 import { motion } from 'framer-motion';
-import { FiFolder, FiClock, FiDatabase, FiPlus } from 'react-icons/fi';
+import { FiFolder, FiClock, FiDatabase, FiPlus, FiTrash2, FiFileText } from 'react-icons/fi';
 import { useState, useEffect } from 'react';
 import { useStore } from '../store';
 import api from '../api';
 
 const Sidebar = ({ isMobile, width = 320 }) => {
   const [activeSection, setActiveSection] = useState('collections');
-  const { collections, setCollections, history, setHistory, setSidebarOpen } = useStore();
+  const { 
+    collections, 
+    setCollections, 
+    history, 
+    setHistory,
+    requests,
+    loadRequest,
+    deleteRequest,
+    setSidebarOpen,
+    selectedCollection,
+    setSelectedCollection
+  } = useStore();
 
   useEffect(() => {
     fetchCollections();
@@ -94,25 +105,44 @@ const Sidebar = ({ isMobile, width = 320 }) => {
               <span>New Collection</span>
             </motion.button>
 
-            {collections.map((collection) => (
-              <motion.div
-                key={collection.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                whileHover={{ scale: 1.02, x: 5 }}
-                className="p-3 bg-white/5 hover:bg-white/10 rounded-lg cursor-pointer border border-transparent hover:border-primary/30 transition-all"
-              >
-                <div className="flex items-center space-x-2">
-                  <FiFolder className="w-4 h-4 text-primary" />
-                  <span className="text-sm">{collection.name}</span>
-                </div>
-                {collection.description && (
-                  <p className="text-xs text-gray-400 mt-1 ml-6">
-                    {collection.description}
-                  </p>
-                )}
-              </motion.div>
-            ))}
+            {collections.map((collection) => {
+              const collectionRequests = requests.filter(r => r.collectionId === collection.id);
+              const isSelected = selectedCollection?.id === collection.id;
+              const hasRequests = collectionRequests.length > 0;
+
+              return (
+                <motion.button
+                  key={collection.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    setSelectedCollection(collection);
+                    // Automatically load first request from this collection
+                    if (hasRequests) {
+                      loadRequest(collectionRequests[0].id);
+                    }
+                    isMobile && setSidebarOpen(false);
+                  }}
+                  className={`w-full flex items-center justify-between p-3 rounded-lg border transition-all text-left ${
+                    isSelected
+                      ? 'bg-primary/30 border-primary/50 text-primary'
+                      : 'bg-white/5 border-transparent hover:border-primary/30 text-gray-300'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2 flex-1">
+                    <FiFolder className="w-4 h-4 flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium truncate">{collection.name}</p>
+                      <span className="text-xs text-gray-400">
+                        {collectionRequests.length} request{collectionRequests.length !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                  </div>
+                </motion.button>
+              );
+            })}
           </div>
         )}
 

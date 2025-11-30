@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
-import { FiSend, FiChevronDown } from 'react-icons/fi';
-import { useState } from 'react';
+import { FiSend, FiChevronDown, FiSave, FiCheck } from 'react-icons/fi';
+import { useState, useEffect } from 'react';
 import { useStore } from '../store';
 import api from '../api';
 
@@ -36,12 +36,30 @@ const RequestBuilder = () => {
     addBodyItem,
     updateBodyItem,
     removeBodyItem,
+    saveRequestToCollection,
+    updateSavedRequest,
+    selectedRequest,
+    selectedCollection,
+    collections,
+    lastSavedTime,
+    autoSaveEnabled,
+    setAutoSaveEnabled,
     addToHistory,
   } = useStore();
 
   const [methodDropdown, setMethodDropdown] = useState(false);
+  const [showSaveIndicator, setShowSaveIndicator] = useState(false);
 
   const methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
+
+  // Show save indicator when request is auto-saved
+  useEffect(() => {
+    if (lastSavedTime && selectedRequest) {
+      setShowSaveIndicator(true);
+      const timer = setTimeout(() => setShowSaveIndicator(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [lastSavedTime, selectedRequest]);
 
   const handleSendRequest = async () => {
     if (!url) return;
@@ -172,6 +190,31 @@ const RequestBuilder = () => {
           <FiSend className="w-4 h-4" />
           <span>Send</span>
         </motion.button>
+
+        {/* Auto-Save Status Indicator */}
+        {selectedRequest && selectedCollection && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: showSaveIndicator ? 1 : 0.5, scale: 1 }}
+            className="w-full sm:w-auto px-4 py-3 bg-green-500/10 border border-green-500/30 rounded-lg flex items-center justify-center space-x-2 transition-all"
+          >
+            <motion.div
+              animate={{ scale: showSaveIndicator ? [1, 1.2, 1] : 1 }}
+              transition={{ duration: 0.5 }}
+            >
+              <FiCheck className={`w-4 h-4 ${showSaveIndicator ? 'text-green-400' : 'text-green-300'}`} />
+            </motion.div>
+            <div className="text-left">
+              <p className="text-xs sm:text-sm text-green-300">
+                {showSaveIndicator ? 'Saved!' : 'Auto-saving...'}
+              </p>
+              <p className="text-xs text-green-400/70">
+                {selectedCollection.name}
+              </p>
+            </div>
+          </motion.div>
+        )}
+
       </motion.div>
 
       {/* Tabs */}
